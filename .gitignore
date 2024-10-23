@@ -1,0 +1,9 @@
+# Ignorer les dossiers spécifiques
+.vscode/
+new_env/
+venv/
+
+# Ignorer tout fichier temporaire ou inutile
+*.pyc
+__pycache__/
+.DS_Store
