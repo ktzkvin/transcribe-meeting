@@ -1,0 +1,28 @@
+# Ignorer les dossiers spécifiques
+.vscode/
+venv/
+save/
+
+# Ignorer les fichiers audio générés
+*.wav
+*.mp3
+
+# Ignorer les fichiers spécifiques au système d'exploitation
+.DS_Store
+Thumbs.db
+
+# Ignorer les fichiers de log
+*.log
+
+# Ignorer les fichiers Python compilés
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignorer les fichiers spécifiques à l'environnement
+*.env
+environment.yml
+
+# Ignorer les fichiers spécifiques à Git
+.git/
