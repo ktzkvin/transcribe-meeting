@@ -1,28 +1,39 @@
-# Transcription et Diarisation de Réunions
+# Speaker Diarization with DER Calculation 📢🎙️
 
-Ce projet utilise des bibliothèques comme `pyannote.audio` et `transformers` pour analyser des fichiers audio en identifiant "qui parle quand" (diarisation des locuteurs) et en transcrivant les conversations en texte (speech-to-text).
-
-## Concepts clés
-
-### 1. **Diarisation des locuteurs**
-La diarisation consiste à analyser un fichier audio contenant plusieurs locuteurs pour identifier les segments correspondant à chaque locuteur. Cela permet de déterminer les intervalles de temps où chaque locuteur parle, sans produire de transcription.
-
-#### Outils utilisés :
-- **`pyannote.audio`** : Une bibliothèque spécialisée dans l'analyse de l'audio, utilisée pour séparer les locuteurs dans un enregistrement.
+[![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/downloads/) 
+[![PyAnnote](https://img.shields.io/badge/Powered%20By-Pyannote-brightgreen)](https://pyannote.github.io/pyannote-audio/) 
+[![License](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/<username>/<repo-name>)](https://github.com/<username>/<repo-name>/issues)
 
 ---
 
-### 2. **Transcription automatique de la parole (ASR)**
-La transcription automatique convertit un contenu audio en texte. Elle produit une transcription de ce qui a été dit, sans distinguer les différents locuteurs.
+## 🎯 **Project Overview**
 
-#### Outils utilisés :
-- **`transformers`** : Une bibliothèque de modèles préentraînés de Hugging Face.
-- **`Whisper`** : Un modèle développé par OpenAI, utilisé pour transcrire l'audio en texte avec des horodatages.
+This repository is a practical implementation of **Speaker Diarization**, allowing you to identify "who spoke when" in audio recordings. It focuses on:
+
+- Segmenting audio into speaker-labeled segments.
+- Calculating **Diarization Error Rate (DER)** to evaluate performance.
+- Leveraging **PyAnnote** models for state-of-the-art diarization tasks.
+
+Whether you're a speech researcher 🧠, a developer 📱, or just curious 🎓, this repository is for you!
 
 ---
 
-### 3. **Combinaison de la diarisation et de la transcription**
-En fusionnant les résultats de la diarisation et de la transcription, il est possible de produire une transcription enrichie qui associe chaque segment de texte à un locuteur spécifique, avec les horodatages correspondants.
+## 🚀 **Key Features**
 
-#### Outils utilisés :
-- **`Speechbox`** : Une extension facilitant l'alignement des segments temporels entre la transcription et la diarisation.
+✅ **Speaker Diarization Pipeline**: Detects and labels individual speakers in an audio file.
+
+✅ **Diarization Error Rate Calculation**: Provides detailed metrics for evaluating diarization performance (FA, MD, SC).
+
+✅ **Flexible Usage**: Works seamlessly with custom audio datasets.
+
+✅ **Visualization Support**: Visualize diarization segments using timeline charts.
+
+---
+
+## 🛠️ **Installation**
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/<username>/<repo-name>.git
+   cd <repo-name>
