@@ -15,8 +15,6 @@ This repository is a practical implementation of **Speaker Diarization**, allowi
 - Calculating **Diarization Error Rate (DER)** to evaluate performance.
 - Leveraging **PyAnnote** models for state-of-the-art diarization tasks.
 
-Whether you're a speech researcher 🧠, a developer 📱, or just curious 🎓, this repository is for you!
-
 ---
 
 ## 🚀 **Key Features**
