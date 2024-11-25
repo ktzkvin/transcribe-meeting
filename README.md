@@ -33,5 +33,5 @@ This repository is a practical implementation of **Speaker Diarization**, allowi
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/<username>/<repo-name>.git
-   cd <repo-name>
+   git clone https://github.com/ktzkvin/diarization-transcription
+   cd diarization-transciption
