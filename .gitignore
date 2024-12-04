@@ -2,6 +2,7 @@
 .vscode/
 new_env/
 venv/
+AMI-diarization-setup/
 
 # Ignorer tout fichier temporaire ou inutile
 *.pyc
