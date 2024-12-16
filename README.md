@@ -3,7 +3,6 @@
 [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/downloads/) 
 [![PyAnnote](https://img.shields.io/badge/Powered%20By-Pyannote-brightgreen)](https://pyannote.github.io/pyannote-audio/) 
 [![License](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE)
-[![GitHub issues](https://img.shields.io/github/issues/<username>/<repo-name>)](https://github.com/<username>/<repo-name>/issues)
 
 ---
 
