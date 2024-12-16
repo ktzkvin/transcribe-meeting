@@ -3,6 +3,8 @@
 new_env/
 venv/
 AMI-diarization-setup/
+results/
+pyannote/
 
 # Ignorer tout fichier temporaire ou inutile
 *.pyc
@@ -11,3 +13,5 @@ __pycache__/
 
 # Ignorer les fichiers de configuration
 .tokens
+
+.wav
