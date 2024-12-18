@@ -52,12 +52,8 @@ else:
 if "hf_token" in st.session_state:
     st.header("Speaker Diarization and Transcription Process")
 
-    whisper_device = "GPU" if torch.cuda.is_available() else "CPU"
-    diarization_device = "GPU" if torch.cuda.is_available() else "CPU"
-
-    # Affichage des configurations
-    st.info(f"Whisper is running on: **{whisper_device}**")
-    st.info(f"PyAnnote is running on: **{diarization_device}**")
+    device = "GPU" if torch.cuda.is_available() else "CPU"
+    st.info(f"Whisper and Pyannote are running on: **{device}**")
 
     # PyAnnote Pipeline Configuration
     diarization_pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1", use_auth_token=st.session_state.hf_token)
@@ -172,7 +168,11 @@ if "hf_token" in st.session_state:
         with st.spinner("Transcribing the audio... This may take a while."):
             transcription = whisper_pipeline(chosen_audio_path)
         end_time = time.time()
-        st.text_area("Transcription", transcription["text"], height=200)
+
+        # Affichage de la transcription en mode "en propre" (non modifiable)
+        st.markdown("### Transcription Result")
+        st.markdown(transcription["text"])
+
         st.info(f"Whisper transcription completed in **{end_time - start_time:.2f} seconds**")
 
         # Lancer la diarization PyAnnote
@@ -189,10 +189,7 @@ if "hf_token" in st.session_state:
 
             diarization_result = diarization_pipeline(chosen_audio_path, **diarization_args)
         end_time = time.time()
-        st.info(f"PyAnnote diarization completed in **{end_time - start_time:.2f} seconds**")
-
-        # Afficher les résultats de la diarization
-        st.success("Speaker Diarization Completed!")
         diarization_result
+        st.info(f"Diarization completed in **{end_time - start_time:.2f} seconds**")
 else:
     st.warning("Please log in to Hugging Face to proceed.")
