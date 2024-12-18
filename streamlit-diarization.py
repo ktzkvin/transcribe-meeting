@@ -5,6 +5,7 @@ from pyannote.audio import Pipeline
 from huggingface_hub import login
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 import torch
+import time
 
 # Hugging Face Token
 TOKEN_FILE = ".token"
@@ -50,9 +51,20 @@ else:
 # Configuration de PyAnnote et Whisper
 if "hf_token" in st.session_state:
     st.header("Speaker Diarization and Transcription Process")
-    diarization_pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1", use_auth_token=st.session_state.hf_token)
 
-    # Configuration Whisper large-v3
+    whisper_device = "GPU" if torch.cuda.is_available() else "CPU"
+    diarization_device = "GPU" if torch.cuda.is_available() else "CPU"
+
+    # Affichage des configurations
+    st.info(f"Whisper is running on: **{whisper_device}**")
+    st.info(f"PyAnnote is running on: **{diarization_device}**")
+
+    # PyAnnote Pipeline Configuration
+    diarization_pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1", use_auth_token=st.session_state.hf_token)
+    if torch.cuda.is_available():
+        diarization_pipeline.to(torch.device("cuda"))
+
+    # Whisper large-v3 Configuration
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
@@ -156,12 +168,16 @@ if "hf_token" in st.session_state:
     # Transcription Whisper
     if chosen_audio_path and os.path.exists(chosen_audio_path):
         st.header("Running Transcription with Whisper")
+        start_time = time.time()
         with st.spinner("Transcribing the audio... This may take a while."):
             transcription = whisper_pipeline(chosen_audio_path)
-            st.text_area("Transcription", transcription["text"], height=200)
+        end_time = time.time()
+        st.text_area("Transcription", transcription["text"], height=200)
+        st.info(f"Whisper transcription completed in **{end_time - start_time:.2f} seconds**")
 
         # Lancer la diarization PyAnnote
         st.header("Running Speaker Diarization")
+        start_time = time.time()
         with st.spinner("Processing the audio with PyAnnote... This may take a while."):
             diarization_args = {}
             if st.session_state.num_speakers:
@@ -172,6 +188,8 @@ if "hf_token" in st.session_state:
                 diarization_args["max_speakers"] = int(st.session_state.max_speakers)
 
             diarization_result = diarization_pipeline(chosen_audio_path, **diarization_args)
+        end_time = time.time()
+        st.info(f"PyAnnote diarization completed in **{end_time - start_time:.2f} seconds**")
 
         # Afficher les résultats de la diarization
         st.success("Speaker Diarization Completed!")
