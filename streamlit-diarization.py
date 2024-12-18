@@ -193,7 +193,6 @@ if "hf_token" in st.session_state:
 
         # Afficher les résultats de la diarization
         st.success("Speaker Diarization Completed!")
-        for turn, _, speaker in diarization_result.itertracks(yield_label=True):
-            st.text(f"{turn.start:.1f}s - {turn.end:.1f}s: Speaker {speaker}")
+        diarization_result
 else:
     st.warning("Please log in to Hugging Face to proceed.")
