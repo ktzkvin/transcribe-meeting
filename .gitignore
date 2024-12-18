@@ -12,6 +12,6 @@ __pycache__/
 .DS_Store
 
 # Ignorer les fichiers de configuration
-.tokens
+*.tokens
 
-.wav
+*.wav
