@@ -4,16 +4,28 @@ import os
 from pyannote.audio import Pipeline
 from huggingface_hub import login
 
-# Connexion à Hugging Face pour le token d'authentification via un fichier .token
+# Hugging Face Token
 TOKEN_FILE = ".token"
 
 def get_token_from_file():
+    """
+    Récupérer le token Hugging Face depuis le fichier .token
+    
+    :return: Token Hugging Face
+
+    """
     if os.path.exists(TOKEN_FILE):
         with open(TOKEN_FILE, "r") as file:
             return file.read().strip()
     return None
 
 def save_token_to_file(token):
+    """
+    Sauvegarder le token Hugging Face dans le fichier .token
+
+    :param token: Token Hugging Face
+
+    """
     with open(TOKEN_FILE, "w") as file:
         file.write(token)
 
