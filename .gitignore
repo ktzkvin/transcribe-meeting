@@ -13,4 +13,4 @@ __pycache__/
 
 # Ignorer les fichiers
 .tokens
-.wav
+*.wav

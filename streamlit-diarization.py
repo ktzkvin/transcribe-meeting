@@ -3,6 +3,8 @@ from streamlit_mic_recorder import mic_recorder
 import os
 from pyannote.audio import Pipeline
 from huggingface_hub import login
+from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
+import torch
 
 # Hugging Face Token
 TOKEN_FILE = ".token"
@@ -12,7 +14,6 @@ def get_token_from_file():
     Récupérer le token Hugging Face depuis le fichier .token
     
     :return: Token Hugging Face
-
     """
     if os.path.exists(TOKEN_FILE):
         with open(TOKEN_FILE, "r") as file:
@@ -24,7 +25,6 @@ def save_token_to_file(token):
     Sauvegarder le token Hugging Face dans le fichier .token
 
     :param token: Token Hugging Face
-
     """
     with open(TOKEN_FILE, "w") as file:
         file.write(token)
@@ -47,14 +47,34 @@ else:
         else:
             st.warning("Please provide a valid Hugging Face Token.")
 
-# Configuration de PyAnnote diarization
+# Configuration de PyAnnote et Whisper
 if "hf_token" in st.session_state:
-    st.header("Speaker Diarization Process")
+    st.header("Speaker Diarization and Transcription Process")
     diarization_pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1", use_auth_token=st.session_state.hf_token)
+
+    # Configuration Whisper large-v3
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+
+    model_id = "openai/whisper-large-v3"
+    model = AutoModelForSpeechSeq2Seq.from_pretrained(
+        model_id, torch_dtype=torch_dtype, low_cpu_mem_usage=True, use_safetensors=True
+    )
+    model.to(device)
+
+    processor = AutoProcessor.from_pretrained(model_id)
+
+    whisper_pipeline = pipeline(
+        "automatic-speech-recognition",
+        model=model,
+        tokenizer=processor.tokenizer,
+        feature_extractor=processor.feature_extractor,
+        torch_dtype=torch_dtype,
+        device=device,
+    )
 
     # Options avec menus déroulants
     st.subheader("⚙️ Settings")
-
     speaker_options = [""] + [str(i) for i in range(1, 11)]  # "vide" + 1 à 10
 
     # Gestion des interdépendances
@@ -133,8 +153,14 @@ if "hf_token" in st.session_state:
 
     st.markdown("---")
 
-    # Lancer la diarization PyAnnote
+    # Transcription Whisper
     if chosen_audio_path and os.path.exists(chosen_audio_path):
+        st.header("Running Transcription with Whisper")
+        with st.spinner("Transcribing the audio... This may take a while."):
+            transcription = whisper_pipeline(chosen_audio_path)
+            st.text_area("Transcription", transcription["text"], height=200)
+
+        # Lancer la diarization PyAnnote
         st.header("Running Speaker Diarization")
         with st.spinner("Processing the audio with PyAnnote... This may take a while."):
             diarization_args = {}
@@ -149,9 +175,7 @@ if "hf_token" in st.session_state:
 
         # Afficher les résultats de la diarization
         st.success("Speaker Diarization Completed!")
-        diarization_result
-
-    else:
-        st.warning("No audio file selected or processed.")
+        for turn, _, speaker in diarization_result.itertracks(yield_label=True):
+            st.text(f"{turn.start:.1f}s - {turn.end:.1f}s: Speaker {speaker}")
 else:
     st.warning("Please log in to Hugging Face to proceed.")
