@@ -32,9 +32,9 @@ class PrintObserver(Observer):
     def on_completed(self):
         self.patch()
 
-pipeline = SpeakerDiarization(SpeakerDiarizationConfig(device='cpu'))
+pipeline = SpeakerDiarization(SpeakerDiarizationConfig(device='cuda'))
 mic = MicrophoneAudioSource()
-file_audio = FileAudioSource(file="audios/airport_audio.wav", sample_rate=16000)
+file_audio = FileAudioSource(file="data/audios/airport_audio.wav", sample_rate=16000)
 inference = StreamingInference(pipeline, file_audio, do_plot=False)
 inference.attach_observers(RTTMWriter(mic.uri, "file.rttm"), PrintObserver())
 prediction = inference()

@@ -1,12 +1,12 @@
 import rx.operators as ops
 import diart.operators as dops
-from diart.sources import FileAudioSource
-from diart.blocks import SpeakerSegmentation, OverlapAwareSpeakerEmbedding
+from diart.sources import MicrophoneAudioSource
+from diart.blocks import SpeakerSegmentation, OverlapAwareSpeakerEmbedding, SpeakerEmbedding
 from pyannote.core.feature import SlidingWindowFeature
 
 segmentation = SpeakerSegmentation.from_pretrained("pyannote/segmentation-3.0")
 embedding = OverlapAwareSpeakerEmbedding.from_pretrained("pyannote/wespeaker-voxceleb-resnet34-LM")
-mic = FileAudioSource(file="audios/audio.wav", sample_rate=16000)
+mic = MicrophoneAudioSource()
 
 
 def apply_segmentation(wav):
