@@ -10,3 +10,13 @@ dependencies = [
     "numpy==1.24.4",
     "python-dotenv>=1.0.1",
 ]
+
+[project.optional-dependencies]
+kafka = [
+    "kafka-python>=2.0.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4",
+]
