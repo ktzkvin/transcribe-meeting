@@ -1,0 +1,10 @@
+{
+    "segmentation_model": "pyannote/segmentation-3.0",
+    "embedding_model": "pyannote/wespeaker-voxceleb-resnet34-LM",
+    "mic": null,
+    "audio_path": null,
+    
+    "device": "cuda",
+    "sample_rate" : 16000
+  }
+  

@@ -15,3 +15,6 @@ __pycache__/
 *.tokens
 
 *.wav
+*.rttm
+data/*
+.env
