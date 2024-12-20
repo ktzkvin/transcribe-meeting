@@ -103,9 +103,7 @@ if "hf_token" in st.session_state:
     def update_min_max_speakers():
         st.session_state.num_speakers = ""
 
-    num_speakers = st.sidebar.selectbox(
-        "Number of Speakers", speaker_options, key="num_speakers", on_change=update_num_speakers
-    )
+    num_speakers = st.sidebar.selectbox("Number of Speakers", speaker_options, key="num_speakers", on_change=update_num_speakers)
     min_speakers = st.sidebar.selectbox(
         "Minimum Speakers", speaker_options, key="min_speakers", on_change=update_min_max_speakers
     )
@@ -190,7 +188,7 @@ if "hf_token" in st.session_state:
             start_time = time.time()
             diarization_result = diarization_pipeline(chosen_audio_path, **diarization_args)
         end_time = time.time()
-        st.success("Diarization Completed!")
+        diarization_result
         st.info(f"Diarization completed in **{end_time - start_time:.2f} seconds**")
         st.session_state.run_diarization = False  # Réinitialiser l'état
 else:
