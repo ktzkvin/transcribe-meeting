@@ -18,8 +18,14 @@ dependencies = [
 kafka = [
     "kafka-python>=2.0.2",
 ]
+whisper = [
+    "whisper-timestamped",
+]
 
 [dependency-groups]
 dev = [
     "pytest>=8.3.4",
 ]
+
+[tool.uv.sources]
+whisper-timestamped = { git = "https://github.com/linto-ai/whisper-timestamped" }
