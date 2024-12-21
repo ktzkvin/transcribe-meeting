@@ -29,12 +29,12 @@ class KafkaAudioSource(AudioSource):
 
             try:
                 data = process_message_audio_kafka(msg.value())
-                audio_chunk = data.audio_data
-
-                yield audio_chunk
+                self.stream.on_next(data)
 
             except Exception as e:
-                print(f"{e}")
+                self.stream.on_error(e)
+                break
+        self.stream.on_completed()
 
     def stop(self):
         self._stop = True
