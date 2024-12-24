@@ -20,7 +20,8 @@ class FileAudioSourceTimed(FileAudioSource):
 
         # Add zero padding at the beginning if required
         if self.padding_start > 0:
-            num_pad_samples = int(np.rint(self.padding_start * self.sample_rate))
+            num_pad_samples = int(
+                np.rint(self.padding_start * self.sample_rate))
             zero_padding = torch.zeros(waveform.shape[0], num_pad_samples)
             waveform = torch.cat([zero_padding, waveform], dim=1)
 
@@ -40,7 +41,8 @@ class FileAudioSourceTimed(FileAudioSource):
         # Add last incomplete chunk with padding
         if num_samples % self.block_size != 0:
             last_chunk = (
-                waveform[:, chunks.shape[0] * self.block_size :].unsqueeze(0).numpy()
+                waveform[:, chunks.shape[0] *
+                         self.block_size:].unsqueeze(0).numpy()
             )
             diff_samples = self.block_size - last_chunk.shape[-1]
             last_chunk = np.concatenate(
@@ -89,13 +91,15 @@ class MicrophoneAudioSourceTimed(MicrophoneAudioSource):
 
     def __init__(self, block_duration=0.5, device=None):
         super().__init__(block_duration, device)
+        self.block_duration = block_duration
 
     def _read_callback(self, samples, *args):
         now = datetime.now()
 
         audio_metadata = AudioMicrophoneMetadata(
+            source=self.uri,
             audio_data=samples[:, [0]].T,
-            start_time=now - timedelta(seconds=self.duration),
+            start_time=now - timedelta(seconds=self.block_duration),
             end_time=now,
             audio_segment_index=0,
             sample_rate=self.sample_rate,
