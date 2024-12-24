@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import torch
 from einops import rearrange
+from uuid import uuid4
 
 
 from diart.sources import MicrophoneAudioSource, FileAudioSource
@@ -63,6 +64,8 @@ class FileAudioSourceTimed(FileAudioSource):
                     sample_rate=self.sample_rate,
                     source=self.file,
                     audio_segment_index=i,
+                    _id=str(uuid4())
+
                 )
                 self.stream.on_next(audio_metadata)
             except BaseException as e:
@@ -103,5 +106,6 @@ class MicrophoneAudioSourceTimed(MicrophoneAudioSource):
             end_time=now,
             audio_segment_index=0,
             sample_rate=self.sample_rate,
+            _id=str(uuid4())
         )
         self._queue.put_nowait(audio_metadata)
