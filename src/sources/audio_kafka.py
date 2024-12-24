@@ -1,10 +1,13 @@
+import json
 from dataclasses import asdict
 
 from kafka import KafkaConsumer
 from diart.sources import AudioSource
 
-from src.audio.kafka import process_message_audio_kafka
+
 from src.schema.config.audio import KafkaAudioConfig
+from src.schema.audio import AudioFileMetadata, AudioMicrophoneMetadata
+import numpy as np
 
 
 class KafkaAudioSource(AudioSource):
@@ -12,23 +15,40 @@ class KafkaAudioSource(AudioSource):
     def __init__(
         self, kafka_config: KafkaAudioConfig, sample_rate: int, chunk_size: int
     ):
-        super().__init__(sample_rate=sample_rate)
-        self.consumer = KafkaConsumer(**asdict(kafka_config))
+        super().__init__(uri=kafka_config.topic, sample_rate=sample_rate)
+        self.consumer = KafkaConsumer(
+            kafka_config.topic,
+            bootstrap_servers=kafka_config.bootstrap_servers,
+            auto_offset_reset=kafka_config.auto_offset_reset,
+            enable_auto_commit=True,
+            group_id='my-group',
+            fetch_max_bytes=kafka_config.fetch_max_bytes
+        )
         self.topic = kafka_config.topic
         self.chunk_size = chunk_size
         self._stop = False
 
     def read(self):
         while not self._stop:
-            msg = self.consumer.poll(1.0)  # Attendre un message pendant 1 seconde
-            if msg is None:
-                continue
-            if msg.error():
-                print(f"Erreur Kafka : {msg.error()}")
+            msg = self.consumer.poll(1.0, max_records=1)
+            if msg is None or not msg:
                 continue
 
             try:
-                data = process_message_audio_kafka(msg.value())
+
+                for k in msg:
+                    for record in msg[k]:
+                        value = json.loads(record.value.decode("utf-8"))
+                        value['audio_data'] = np.asarray(value['audio_data'])
+                        data: AudioMicrophoneMetadata = AudioMicrophoneMetadata(
+                            **value)
+                        msg_metadata = {
+                            "topic": record.topic,
+                            "partition": record.partition,
+                            "offset": record.offset,
+                            "timestamp": record.timestamp,
+                            "key": record.key.decode('utf-8') if record.key else None
+                        }
                 self.stream.on_next(data)
 
             except Exception as e:
@@ -36,6 +56,9 @@ class KafkaAudioSource(AudioSource):
                 break
         self.stream.on_completed()
 
+    def close(self):
+        self.consumer.close()
+
     def stop(self):
         self._stop = True
-        self.consumer.close()
+        self.close()
