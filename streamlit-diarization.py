@@ -29,7 +29,7 @@ def save_token_to_file(token):
 @st.cache_resource
 def load_diarization_pipeline(token):
     """
-    Charger le pipeline de diarisation de PyAnnote avec mise en cache.
+    Charger le pipeline de diarisation de Pyannote
     """
     pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1", use_auth_token=token)
     if torch.cuda.is_available():
@@ -39,7 +39,7 @@ def load_diarization_pipeline(token):
 @st.cache_resource
 def load_whisper_pipeline():
     """
-    Charger le modèle Whisper avec mise en cache.
+    Charger le modèle Whisper = transcription
     """
     model_id = "openai/whisper-large-v3"
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -66,6 +66,9 @@ if hf_token:
     st.success("Token loaded from .token file.")
     login(token=hf_token)
     st.session_state.hf_token = hf_token
+    
+    device = "GPU" if torch.cuda.is_available() else "CPU"
+    st.info(f"Whisper and Pyannote are running on: **{device}**")
 else:
     manual_token = st.text_input("Enter your Hugging Face Token:", type="password")
     if st.button("Login"):
@@ -78,9 +81,7 @@ else:
             st.warning("Please provide a valid Hugging Face Token.")
 
 if "hf_token" in st.session_state:
-    st.header("Speaker Diarization and Transcription Process")
-    device = "GPU" if torch.cuda.is_available() else "CPU"
-    st.info(f"Whisper and Pyannote are running on: **{device}**")
+    st.header("🔊 Speaker Diarization and Transcription")
 
     diarization_pipeline = load_diarization_pipeline(st.session_state.hf_token)
     whisper_pipeline = load_whisper_pipeline()
@@ -111,41 +112,58 @@ if "hf_token" in st.session_state:
         "Maximum Speakers", speaker_options, key="max_speakers", on_change=update_min_max_speakers
     )
 
-    # Section 1: Enregistrement audio
-    st.header("Record Audio from Microphone")
+    # Initialiser le chemin audio et le mode path
+    if "chosen_audio_path" not in st.session_state:
+        st.session_state.chosen_audio_path = None
+    if "path" not in st.session_state:
+        st.session_state.path = False
+
+    # Section 1 : Enregistrement audio
+    st.subheader("Record Audio from Microphone")
     audio = mic_recorder(
         start_prompt="Start recording",
         stop_prompt="Stop recording",
         format="wav"
     )
 
-    chosen_audio_path = None
-
     if audio and "bytes" in audio:
-        chosen_audio_path = "streamlit-records/output.wav"
-        with open(chosen_audio_path, "wb") as f:
+        st.session_state.chosen_audio_path = "streamlit-records/output.wav"
+        with open(st.session_state.chosen_audio_path, "wb") as f:
             f.write(audio["bytes"])
         st.audio(audio["bytes"], format='audio/wav')
-        st.success(f"Audio saved as '{chosen_audio_path}'.")
+        st.success(f"Audio saved as '{st.session_state.chosen_audio_path}'.")
+        st.session_state.path = "recorded"
     else:
         st.warning("No audio recorded.")
 
     st.markdown("---")
 
-    # Section 2: Importer un fichier audio ou utiliser un existant
-    st.header("Choose Audio Source")
+    # Section 2 : Importer un fichier audio ou utiliser un existant
+    st.subheader("Choose Audio Source")
+
+    # Bouton pour upload un fichier audio
     uploaded_file = st.file_uploader("Upload an audio file", type=["wav", "mp3"])
     if uploaded_file is not None:
-        chosen_audio_path = "streamlit-records/uploaded_audio.wav"
-        with open(chosen_audio_path, "wb") as f:
+        st.session_state.chosen_audio_path = "streamlit-records/uploaded_audio.wav"
+        with open(st.session_state.chosen_audio_path, "wb") as f:
             f.write(uploaded_file.getvalue())
-        st.audio(uploaded_file, format='audio/wav')
-        st.success(f"Uploaded audio saved as '{chosen_audio_path}'.")
+        st.session_state.path = "uploaded"
 
+    # Bouton pour utiliser un fichier audio existant
     if st.button("Use Existing Audio"):
-        chosen_audio_path = "audios/audio_DER.wav"
-        st.write(f"Using default audio: {chosen_audio_path}")
-        st.audio(chosen_audio_path, format='audio/wav')
+        st.session_state.chosen_audio_path = "audios/audio_DER.wav"
+        st.session_state.path = "default"
+
+    # Afficher l'audio si un chemin est défini
+    if st.session_state.chosen_audio_path:
+        if st.session_state.path == "default":
+            st.write(f"Using default audio: {st.session_state.chosen_audio_path}")
+        elif st.session_state.path == "uploaded":
+            st.success(f"Uploaded audio saved as '{st.session_state.chosen_audio_path}'.")
+        elif st.session_state.path == "recorded":
+            st.success(f"Audio recorded at '{st.session_state.chosen_audio_path}'.")
+
+        st.audio(st.session_state.chosen_audio_path, format='audio/wav')
 
     st.markdown("---")
 
@@ -162,22 +180,21 @@ if "hf_token" in st.session_state:
     if st.button("Run Diarization"):
         st.session_state.run_diarization = True
 
-    # Exécution de la transcription si le bouton est pressé
-    if st.session_state.run_transcription and chosen_audio_path and os.path.exists(chosen_audio_path):
-        st.header("Running Transcription with Whisper")
+    # Exécution de la transcription si le bouton est pressé + si le fichier audio est choisi
+    if st.session_state.run_transcription and st.session_state.chosen_audio_path and os.path.exists(st.session_state.chosen_audio_path):
+        st.subheader("Running Transcription")
         with st.spinner("Transcribing the audio..."):
             start_time = time.time()
-            transcription = whisper_pipeline(chosen_audio_path)
+            transcription = whisper_pipeline(st.session_state.chosen_audio_path)
         end_time = time.time()
-        st.markdown("### Transcription Result")
         st.markdown(transcription["text"])
         st.info(f"Transcription completed in **{end_time - start_time:.2f} seconds**")
         st.session_state.run_transcription = False  # Réinitialiser l'état
-        
-    # Exécution de la diarisation si le bouton est pressé
-    if st.session_state.run_diarization and chosen_audio_path and os.path.exists(chosen_audio_path):
-        st.header("Running Speaker Diarization")
-        with st.spinner("Processing the audio with PyAnnote..."):
+
+    # Exécution de la diarisation si le bouton est pressé + si le fichier audio est choisi
+    if st.session_state.run_diarization and st.session_state.chosen_audio_path and os.path.exists(st.session_state.chosen_audio_path):
+        st.subheader("Running Speaker Diarization")
+        with st.spinner("Processing the audio with Pyannote..."):
             diarization_args = {}
             if st.session_state.num_speakers:
                 diarization_args["num_speakers"] = int(st.session_state.num_speakers)
@@ -186,7 +203,7 @@ if "hf_token" in st.session_state:
             if st.session_state.max_speakers:
                 diarization_args["max_speakers"] = int(st.session_state.max_speakers)
             start_time = time.time()
-            diarization_result = diarization_pipeline(chosen_audio_path, **diarization_args)
+            diarization_result = diarization_pipeline(st.session_state.chosen_audio_path, **diarization_args)
         end_time = time.time()
         diarization_result
         st.info(f"Diarization completed in **{end_time - start_time:.2f} seconds**")
