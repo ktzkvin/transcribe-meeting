@@ -1,3 +1,4 @@
+import sys
 from typing import Union
 import json
 from uuid import uuid4
@@ -38,9 +39,7 @@ class DummyAudioProducer(Observer, BaseProducer):
             print(result)
         return result
 
-    def on_next(
-        self, value: Union[AudioFileMetadata, AudioMicrophoneMetadata]
-    ) -> str:
+    def on_next(self, value: Union[AudioFileMetadata, AudioMicrophoneMetadata]) -> str:
 
         result = self.producer(value)
         return result
@@ -63,14 +62,18 @@ class KafkaAudioProducer(DummyAudioProducer):
             raise ImportError(str(e))
 
         self.__producer: KafkaProducer = KafkaProducer(
-            bootstrap_servers=kafka_config.bootstrap_servers,)
+            bootstrap_servers=kafka_config.bootstrap_servers,
+            max_request_size=kafka_config.fetch_max_bytes,
+        )
         self.__topic = kafka_config.topic
         self.counter = 0
 
     def producer(self, value):
         message = super().producer(value)
-        self.__producer.send(topic=self.__topic, value=message.encode('utf-8'))
-        print(f"OK {self.counter}")
+        value = message.encode("utf-8")
+        size = sys.getsizeof(value)
+        self.__producer.send(topic=self.__topic, value=value)
+        print(f"OK {self.counter} size (octets) {size}")
         self.counter += 1
         return message
 

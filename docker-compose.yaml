@@ -1,3 +1,4 @@
+version: "3.8"
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -19,6 +20,9 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_MESSAGE_MAX_BYTES: 15000000  # Taille maximale d'un message (15 Mo)
+      KAFKA_REPLICA_FETCH_MAX_BYTES: 15000000  # Taille maximale des messages récupérés par les réplicas
+      KAFKA_MAX_MESSAGE_BYTES: 15000000  # Taille maximale d'un message pour le broker
     depends_on:
       - zookeeper
     ports:

@@ -10,30 +10,36 @@ from src.observers.logger import DebugAudioMetadataLogger, DebugLogger
 from src.transcriber.whisper import WhisperTranscriber
 
 
-def main(source_audio: KafkaAudioSource, observer_audio: Observer, transcriber: WhisperTranscriber, observer_transcription: Observer):
-    source_audio.stream.pipe(ops.do(observer_audio), ops.map(transcriber), ops.do(observer_transcription)).subscribe(
-        on_error=lambda _: traceback.print_exc()
-    )
+def main(
+    source_audio: KafkaAudioSource,
+    observer_audio: Observer,
+    transcriber: WhisperTranscriber,
+    observer_transcription: Observer,
+):
+    source_audio.stream.pipe(
+        ops.do(observer_audio), ops.map(transcriber), ops.do(observer_transcription)
+    ).subscribe(on_error=lambda _: traceback.print_exc())
     source_audio.read()
 
 
 if __name__ == "__main__":
     # Command-line argument parsing
     parser = argparse.ArgumentParser(
-        description="Kafka Audio Consumer with Debugging and Transcription")
+        description="Kafka Audio Consumer with Debugging and Transcription"
+    )
 
     # Kafka settings
     parser.add_argument(
         "--topic",
         type=str,
         default="audio",
-        help="Kafka topic to consume from (default: 'audio')"
+        help="Kafka topic to consume from (default: 'audio')",
     )
     parser.add_argument(
         "--bootstrap-servers",
         type=str,
         default="localhost:29092",
-        help="Kafka bootstrap servers (default: 'localhost:29092')"
+        help="Kafka bootstrap servers (default: 'localhost:29092')",
     )
 
     # Audio settings
@@ -41,26 +47,26 @@ if __name__ == "__main__":
         "--sample-rate",
         type=int,
         default=16000,
-        help="Audio sample rate (default: 16000)"
+        help="Audio sample rate (default: 16000)",
     )
     parser.add_argument(
         "--chunk-size",
         type=int,
         default=5,
-        help="Size of each audio chunk (default: 5)"
+        help="Size of each audio chunk (default: 5)",
     )
 
     # Logging settings
     parser.add_argument(
         "--log-file",
         type=str,
-        default="audio-debug.log",
-        help="Log file for saving debug output (default: 'audio-debug.log')"
+        default="consumer-whisper-debug.log",
+        help="Log file for saving debug output (default: 'consumer-whisper-debug.log')",
     )
     parser.add_argument(
         "--write-data",
         action="store_true",
-        help="Whether to log audio data (default: False)"
+        help="Whether to log audio data (default: False)",
     )
 
     # Transcription settings
@@ -69,14 +75,14 @@ if __name__ == "__main__":
         type=str,
         default="small",
         choices=["tiny", "base", "small", "medium", "large"],
-        help="Whisper model to use for transcription (default: 'small')"
+        help="Whisper model to use for transcription (default: 'small')",
     )
     parser.add_argument(
         "--device",
         type=str,
         default="cuda",
         choices=["cuda", "cpu"],
-        help="Device for Whisper transcription (default: 'cuda')"
+        help="Device for Whisper transcription (default: 'cuda')",
     )
 
     # Parse arguments
@@ -85,27 +91,27 @@ if __name__ == "__main__":
     # Set up the Kafka audio source
     source_audio = KafkaAudioSource(
         kafka_config=KafkaAudioConfig(
-            topic=args.topic,
-            bootstrap_servers=args.bootstrap_servers
+            topic=args.topic, bootstrap_servers=args.bootstrap_servers
         ),
         sample_rate=args.sample_rate,
-        chunk_size=args.chunk_size
+        chunk_size=args.chunk_size,
     )
 
     # Set up the logger
-    logger = logging.getLogger("debug")
+    logger = logging.getLogger("consumer-whisper-debug")
     logger.setLevel(logging.DEBUG)
-    logger.addHandler(logging.StreamHandler())
     logger.addHandler(logging.FileHandler(args.log_file))
 
     # Create the observer with the provided logging settings
-    observer = DebugAudioMetadataLogger(
-        logger=logger, write_data=args.write_data
-    )
+    observer = DebugAudioMetadataLogger(logger=logger, write_data=args.write_data)
 
     # Set up Whisper transcriber
     transcriber = WhisperTranscriber(model=args.model, device=args.device)
 
     # Run the main function
-    main(source_audio=source_audio, observer_audio=observer,
-         transcriber=transcriber, observer_transcription=DebugLogger(logger=logger))
+    main(
+        source_audio=source_audio,
+        observer_audio=observer,
+        transcriber=transcriber,
+        observer_transcription=DebugLogger(logger=logger),
+    )

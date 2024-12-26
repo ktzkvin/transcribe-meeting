@@ -21,8 +21,8 @@ class KafkaAudioSource(AudioSource):
             bootstrap_servers=kafka_config.bootstrap_servers,
             auto_offset_reset=kafka_config.auto_offset_reset,
             enable_auto_commit=True,
-            group_id='my-group',
-            fetch_max_bytes=kafka_config.fetch_max_bytes
+            group_id=kafka_config.groud_id,
+            fetch_max_bytes=kafka_config.fetch_max_bytes,
         )
         self.topic = kafka_config.topic
         self.chunk_size = chunk_size
@@ -31,27 +31,26 @@ class KafkaAudioSource(AudioSource):
     def read(self):
         while not self._stop:
             msg = self.consumer.poll(1.0, max_records=1)
-            if msg is None or not msg:
+            if msg is None or msg == {}:
                 continue
 
             try:
-
                 for k in msg:
                     for record in msg[k]:
                         value = json.loads(record.value.decode("utf-8"))
-                        value['audio_data'] = np.asarray(value['audio_data'])
-                        data: AudioMicrophoneMetadata = AudioMicrophoneMetadata(
-                            **value)
+                        value["audio_data"] = np.asarray(value["audio_data"])
+                        data: AudioMicrophoneMetadata = AudioMicrophoneMetadata(**value)
                         msg_metadata = {
                             "topic": record.topic,
                             "partition": record.partition,
                             "offset": record.offset,
                             "timestamp": record.timestamp,
-                            "key": record.key.decode('utf-8') if record.key else None
+                            "key": record.key.decode("utf-8") if record.key else None,
                         }
-                self.stream.on_next(data)
+                        self.stream.on_next(data)
 
             except Exception as e:
+                print(e)
                 self.stream.on_error(e)
                 break
         self.stream.on_completed()

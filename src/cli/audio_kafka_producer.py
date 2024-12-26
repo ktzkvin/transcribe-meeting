@@ -2,15 +2,22 @@ import argparse
 import traceback
 from typing import Union
 import rx.operators as ops
+from rx.core import Observer
 
 from src.sources.audio import MicrophoneAudioSourceTimed, FileAudioSourceTimed
 from src.producer.base import BaseProducer
 from src.producer.audio import KafkaAudioProducer
 from src.schema.config.audio import KafkaAudioConfig
+from src.observers.logger import DebugLogger
+import logging
 
 
-def main(producer: BaseProducer, source_audio: Union[MicrophoneAudioSourceTimed, FileAudioSourceTimed]):
-    source_audio.stream.pipe(ops.do(producer)).subscribe(
+def main(
+    producer: BaseProducer,
+    source_audio: Union[MicrophoneAudioSourceTimed, FileAudioSourceTimed],
+    observer: Observer,
+):
+    source_audio.stream.pipe(ops.do(producer), ops.do(observer)).subscribe(
         on_error=lambda _: traceback.print_exc()
     )
     source_audio.read()
@@ -56,12 +63,11 @@ if __name__ == "__main__":
         help="Path to the audio file if source='file'",
     )
     args = parser.parse_args()
-
-    producer = KafkaAudioProducer(
-        kafka_config=KafkaAudioConfig(
-            topic=args.topic, bootstrap_servers=args.bootstrap_servers
-        )
+    kafka_config = KafkaAudioConfig(
+        topic=args.topic, bootstrap_servers=args.bootstrap_servers
     )
+
+    producer = KafkaAudioProducer(kafka_config=kafka_config)
 
     if args.source == "microphone":
         source_audio = MicrophoneAudioSourceTimed(
@@ -69,8 +75,18 @@ if __name__ == "__main__":
         )
     elif args.source == "file":
         if not args.file_path:
-            raise ValueError(
-                "An audio file must be specified with --file-path.")
-        source_audio = FileAudioSourceTimed(file_path=args.file_path)
+            raise ValueError("An audio file must be specified with --file-path.")
+        source_audio = FileAudioSourceTimed(
+            file=args.file_path, sample_rate=16000, block_duration=args.block_duration
+        )
 
-    main(producer, source_audio=source_audio)
+    logger = logging.getLogger("producer-audio-debug")
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(logging.StreamHandler())
+    logger.addHandler(logging.FileHandler("producer-audio-debug.log"))
+
+    main(
+        producer,
+        source_audio=source_audio,
+        observer=DebugLogger(logger=logger, skip_keys=["audio_data"]),
+    )
