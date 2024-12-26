@@ -10,3 +10,4 @@ class KafkaAudioConfig:
     auto_offset_reset: str = "earliest"
     fetch_max_bytes: int = 16_000_000
     groud_id: Optional[str] = str(uuid4())
+    enable_auto_commit: Optional[bool] = True

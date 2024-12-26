@@ -16,11 +16,12 @@ class KafkaAudioSource(AudioSource):
         self, kafka_config: KafkaAudioConfig, sample_rate: int, chunk_size: int
     ):
         super().__init__(uri=kafka_config.topic, sample_rate=sample_rate)
+        self.enable_auto_commit = kafka_config.enable_auto_commit
         self.consumer = KafkaConsumer(
             kafka_config.topic,
             bootstrap_servers=kafka_config.bootstrap_servers,
             auto_offset_reset=kafka_config.auto_offset_reset,
-            enable_auto_commit=True,
+            enable_auto_commit=self.enable_auto_commit,
             group_id=kafka_config.groud_id,
             fetch_max_bytes=kafka_config.fetch_max_bytes,
         )
@@ -54,6 +55,10 @@ class KafkaAudioSource(AudioSource):
                 self.stream.on_error(e)
                 break
         self.stream.on_completed()
+
+    def commit(self):
+        if not self.enable_auto_commit:
+            self.consumer.commit()
 
     def close(self):
         self.consumer.close()

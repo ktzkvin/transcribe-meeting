@@ -17,7 +17,10 @@ def main(
     observer_transcription: Observer,
 ):
     source_audio.stream.pipe(
-        ops.do(observer_audio), ops.map(transcriber), ops.do(observer_transcription)
+        ops.do(observer_audio),
+        ops.map(transcriber),
+        ops.do(observer_transcription),
+        ops.map(lambda _: source_audio.commit()),
     ).subscribe(on_error=lambda _: traceback.print_exc())
     source_audio.read()
 
@@ -91,7 +94,10 @@ if __name__ == "__main__":
     # Set up the Kafka audio source
     source_audio = KafkaAudioSource(
         kafka_config=KafkaAudioConfig(
-            topic=args.topic, bootstrap_servers=args.bootstrap_servers
+            topic=args.topic,
+            bootstrap_servers=args.bootstrap_servers,
+            groud_id="consumer-audio",
+            enable_auto_commit=False,
         ),
         sample_rate=args.sample_rate,
         chunk_size=args.chunk_size,
