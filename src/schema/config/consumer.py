@@ -4,7 +4,7 @@ from uuid import uuid4
 
 
 @dataclass
-class KafkaAudioConfig:
+class KafkaConsumerConfig:
     topic: str = "audio-files"
     bootstrap_servers: str = "0.0.0.0:9093"
     auto_offset_reset: str = "earliest"

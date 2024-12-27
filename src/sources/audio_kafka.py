@@ -5,7 +5,7 @@ from kafka import KafkaConsumer
 from diart.sources import AudioSource
 
 
-from src.schema.config.audio import KafkaAudioConfig
+from src.schema.config.consumer import KafkaConsumerConfig
 from src.schema.audio import AudioFileMetadata, AudioMicrophoneMetadata
 import numpy as np
 
@@ -13,7 +13,7 @@ import numpy as np
 class KafkaAudioSource(AudioSource):
 
     def __init__(
-        self, kafka_config: KafkaAudioConfig, sample_rate: int, chunk_size: int
+        self, kafka_config: KafkaConsumerConfig, sample_rate: int, chunk_size: int
     ):
         super().__init__(uri=kafka_config.topic, sample_rate=sample_rate)
         self.enable_auto_commit = kafka_config.enable_auto_commit

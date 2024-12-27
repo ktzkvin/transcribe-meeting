@@ -7,7 +7,7 @@ from rx.core import Observer
 from src.sources.audio import MicrophoneAudioSourceTimed, FileAudioSourceTimed
 from src.producer.base import BaseProducer
 from src.producer.kafka import KafkaDataclassProducer
-from src.schema.config.audio import KafkaAudioConfig
+from src.schema.config.consumer import KafkaConsumerConfig
 from src.observers.logger import DebugLogger
 import logging
 
@@ -63,7 +63,7 @@ if __name__ == "__main__":
         help="Path to the audio file if source='file'",
     )
     args = parser.parse_args()
-    kafka_config = KafkaAudioConfig(
+    kafka_config = KafkaConsumerConfig(
         topic=args.topic, bootstrap_servers=args.bootstrap_servers
     )
 

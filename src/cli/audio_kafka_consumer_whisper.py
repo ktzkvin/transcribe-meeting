@@ -5,7 +5,7 @@ import rx.operators as ops
 from rx.core import Observer
 
 from src.sources.audio_kafka import KafkaAudioSource
-from src.schema.config.audio import KafkaAudioConfig
+from src.schema.config.consumer import KafkaConsumerConfig
 from src.schema.config.producer import KafkaProducerConfig
 
 from src.observers.logger import DebugAudioMetadataLogger, DebugLogger
@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
     # Set up the Kafka audio source
     source_audio = KafkaAudioSource(
-        kafka_config=KafkaAudioConfig(
+        kafka_config=KafkaConsumerConfig(
             topic=args.topic,
             bootstrap_servers=args.bootstrap_servers,
             groud_id="consumer-audio",
