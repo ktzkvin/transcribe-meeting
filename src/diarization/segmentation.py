@@ -40,8 +40,11 @@ class AudioSegmentation:
             "pyannote/segmentation", use_hf_token=False
         ),
         target_sample_rate: int = 16_000,
+        device: str = "cpu",
     ):
         self.segmentation_model = segmentation_model
+        self.device = device
+        self.segmentation_model.to(device=self.device)
         self.target_sample_rate = target_sample_rate
 
     @staticmethod
@@ -101,13 +104,18 @@ class AudioSegmentation:
         self, audio_metadata: Union[AudioFileMetadata, AudioMicrophoneMetadata]
     ) -> List[SpeakerSegment]:
 
+        if not isinstance(audio_metadata.audio_data, torch.Tensor):
+            audio_metadata.audio_data = (
+                torch.from_numpy(audio_metadata.audio_data).float().to(self.device)
+            )
+
         segmentation_result = self.segmentation_model(audio_metadata.audio_data)
         audio_duration = audio_metadata.audio_data.shape[-1] / self.target_sample_rate
         frame_duration = (
             audio_duration / segmentation_result.shape[1]
         )  # frames par seconde
         segmentation_result_np = (
-            segmentation_result.squeeze(0).detach().numpy()
+            segmentation_result.squeeze(0).detach().cpu().numpy()
         )  # (frames, speakers)
         segments = AudioSegmentation.get_segments(
             segmentation_result_np, frame_duration, source_id=audio_metadata._id
@@ -117,7 +125,7 @@ class AudioSegmentation:
         for segment in segments:
             start, end = segment.start, segment.end
             segment_waveform = extract_audio_segment(
-                audio_metadata.audio_data.squeeze(0),
+                audio_metadata.audio_data,
                 self.target_sample_rate,
                 start,
                 end,
