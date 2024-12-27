@@ -6,7 +6,7 @@ from rx.core import Observer
 
 from src.sources.audio import MicrophoneAudioSourceTimed, FileAudioSourceTimed
 from src.producer.base import BaseProducer
-from src.producer.audio import KafkaAudioProducer
+from src.producer.kafka import KafkaDataclassProducer
 from src.schema.config.audio import KafkaAudioConfig
 from src.observers.logger import DebugLogger
 import logging
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         topic=args.topic, bootstrap_servers=args.bootstrap_servers
     )
 
-    producer = KafkaAudioProducer(kafka_config=kafka_config)
+    producer = KafkaDataclassProducer(kafka_config=kafka_config)
 
     if args.source == "microphone":
         source_audio = MicrophoneAudioSourceTimed(
