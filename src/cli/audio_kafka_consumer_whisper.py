@@ -6,20 +6,25 @@ from rx.core import Observer
 
 from src.sources.audio_kafka import KafkaAudioSource
 from src.schema.config.audio import KafkaAudioConfig
+from src.schema.config.producer import KafkaTranscriptionConfig
+
 from src.observers.logger import DebugAudioMetadataLogger, DebugLogger
 from src.transcriber.whisper import WhisperTranscriber
+from src.producer.kafka import KafkaDataclassProducer
 
 
 def main(
     source_audio: KafkaAudioSource,
     observer_audio: Observer,
     transcriber: WhisperTranscriber,
+    producer: KafkaDataclassProducer,
     observer_transcription: Observer,
 ):
     source_audio.stream.pipe(
         ops.do(observer_audio),
         ops.map(transcriber),
         ops.do(observer_transcription),
+        ops.do(producer),
         ops.map(lambda _: source_audio.commit()),
     ).subscribe(on_error=lambda _: traceback.print_exc())
     source_audio.read()
@@ -103,13 +108,24 @@ if __name__ == "__main__":
         chunk_size=args.chunk_size,
     )
 
+    producer = KafkaDataclassProducer(
+        kafka_config=KafkaTranscriptionConfig(
+            topic="whisper",
+            bootstrap_servers=args.bootstrap_servers,
+        )
+    )
+
     # Set up the logger
-    logger = logging.getLogger("consumer-whisper-debug")
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(logging.FileHandler(args.log_file))
+    input_logger = logging.getLogger("input-whisper-debug")
+    input_logger.setLevel(logging.DEBUG)
+    input_logger.addHandler(logging.FileHandler(args.log_file))
+
+    output_logger = logging.getLogger("output-whisper-debug")
+    output_logger.setLevel(logging.DEBUG)
+    output_logger.addHandler(logging.FileHandler("output-whisper-debug.log"))
 
     # Create the observer with the provided logging settings
-    observer = DebugAudioMetadataLogger(logger=logger, write_data=args.write_data)
+    observer = DebugAudioMetadataLogger(logger=input_logger, write_data=args.write_data)
 
     # Set up Whisper transcriber
     transcriber = WhisperTranscriber(model=args.model, device=args.device)
@@ -119,5 +135,6 @@ if __name__ == "__main__":
         source_audio=source_audio,
         observer_audio=observer,
         transcriber=transcriber,
-        observer_transcription=DebugLogger(logger=logger),
+        producer=producer,
+        observer_transcription=DebugLogger(logger=output_logger),
     )

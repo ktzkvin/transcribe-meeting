@@ -2,11 +2,11 @@ import sys
 
 
 from src.producer.base import DummyDataclassProducer
-from src.schema.config.audio import KafkaAudioConfig
+from src.schema.config.producer import KafkaTranscriptionConfig
 
 
 class KafkaDataclassProducer(DummyDataclassProducer):
-    def __init__(self, kafka_config: KafkaAudioConfig):
+    def __init__(self, kafka_config: KafkaTranscriptionConfig):
         super().__init__(printing=False)
         try:
 
