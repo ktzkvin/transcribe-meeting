@@ -1,11 +1,11 @@
-from typing import Optional
+from typing import Optional, Union, List
 from dataclasses import dataclass
 from uuid import uuid4
 
 
 @dataclass
 class KafkaConsumerConfig:
-    topic: str = "audio-files"
+    topic: Union[List[str], str] = "audio-files"
     bootstrap_servers: str = "0.0.0.0:9093"
     auto_offset_reset: str = "earliest"
     fetch_max_bytes: int = 16_000_000
