@@ -2,11 +2,11 @@ import sys
 
 
 from src.producer.base import DummyDataclassProducer
-from src.schema.config.producer import KafkaTranscriptionConfig
+from src.schema.config.producer import KafkaProducerConfig
 
 
 class KafkaDataclassProducer(DummyDataclassProducer):
-    def __init__(self, kafka_config: KafkaTranscriptionConfig):
+    def __init__(self, kafka_config: KafkaProducerConfig):
         super().__init__(printing=False)
         try:
 

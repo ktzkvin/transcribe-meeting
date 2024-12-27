@@ -6,7 +6,7 @@ from rx.core import Observer
 
 from src.sources.audio_kafka import KafkaAudioSource
 from src.schema.config.audio import KafkaAudioConfig
-from src.schema.config.producer import KafkaTranscriptionConfig
+from src.schema.config.producer import KafkaProducerConfig
 
 from src.observers.logger import DebugAudioMetadataLogger, DebugLogger
 from src.transcriber.whisper import WhisperTranscriber
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     )
 
     producer = KafkaDataclassProducer(
-        kafka_config=KafkaTranscriptionConfig(
+        kafka_config=KafkaProducerConfig(
             topic="whisper",
             bootstrap_servers=args.bootstrap_servers,
         )
