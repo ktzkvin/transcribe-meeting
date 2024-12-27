@@ -10,8 +10,10 @@ import rx.operators as ops
 
 from src.sources.audio_kafka import KafkaAudioSource
 from src.schema.config.audio import KafkaAudioConfig
+from src.schema.config.producer import KafkaProducerConfig
 from src.observers.logger import DebugAudioMetadataLogger, DebugLogger
 from src.diarization.segmentation import AudioSegmentation
+from src.producer.kafka import KafkaDataclassProducer
 
 # Load environment variables
 load_dotenv()
@@ -23,12 +25,15 @@ def main(
     audio_segmentation: AudioSegmentation,
     observer_audio: Observer,
     segmentation_observer: Observer,
+    producer_segmentation: KafkaDataclassProducer,
 ):
     """Main function to process Kafka audio stream."""
     audio.stream.pipe(
         ops.do(observer_audio),
         ops.map(audio_segmentation),
         ops.do(segmentation_observer),
+        ops.do(producer_segmentation),
+        ops.map(lambda _: audio.commit()),
     ).subscribe(on_error=lambda _: traceback.print_exc())
 
     print("*" * 79)
@@ -121,6 +126,13 @@ if __name__ == "__main__":
     segmentation_observer = DebugLogger(
         logger=logger_segmentation, skip_keys=["audio_data"]
     )
+    producer = KafkaDataclassProducer(
+        kafka_config=KafkaProducerConfig(
+            topic="segmentation-topic",
+            bootstrap_servers=args.bootstrap_servers,
+            fetch_max_bytes=16_000_000,
+        )
+    )
 
     # Run the main function
     main(
@@ -128,4 +140,5 @@ if __name__ == "__main__":
         audio_segmentation=AudioSegmentation(),
         observer_audio=observer,
         segmentation_observer=segmentation_observer,
+        producer_segmentation=producer,
     )
