@@ -18,14 +18,16 @@ class TestAudioEmbedding(unittest.TestCase):
         # Create mock segments
         segments = [
             SpeakerSegment(
-                source="test_source",
+                _id="1",
+                source_id="test_source",
                 start=0.0,
                 end=1.0,
                 speaker="Speaker 0",
                 audio_data=torch.rand(1, 16000),  # 1 second audio at 16kHz
             ),
             SpeakerSegment(
-                source="test_source",
+                _id="2",
+                source_id="test_source",
                 start=1.0,
                 end=2.0,
                 speaker="Speaker 1",
@@ -40,7 +42,8 @@ class TestAudioEmbedding(unittest.TestCase):
         self.assertEqual(len(embeddings), len(segments))
         for embedding, segment in zip(embeddings, segments):
             self.assertIsInstance(embedding, SpeakerEmbedding)
-            self.assertEqual(embedding.source, segment.source)
+            self.assertEqual(embedding.source_id, segment.source_id)
+            self.assertEqual(embedding._id, segment._id)
             self.assertEqual(embedding.start, segment.start)
             self.assertEqual(embedding.end, segment.end)
             self.assertEqual(embedding.speaker, segment.speaker)

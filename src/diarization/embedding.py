@@ -20,7 +20,8 @@ class AudioEmbedding:
             audio_sample = segment.audio_data.unsqueeze(0)
             embedding = self.embedding_model.embedding_model(audio_sample)
             speaker_embedding = SpeakerEmbedding(
-                source=segment.source,
+                _id=segment._id,
+                source_id=segment.source_id,
                 start=segment.start,
                 end=segment.end,
                 speaker=segment.speaker,

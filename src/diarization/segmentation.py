@@ -1,7 +1,9 @@
 from typing import Union, List
+from uuid import uuid4
+
 import numpy as np
 import torch
-import torch
+
 from diart.models import SegmentationModel
 from src.schema.audio import AudioFileMetadata, AudioMicrophoneMetadata
 from src.schema.segmentation import SpeakerSegment
@@ -44,7 +46,7 @@ class AudioSegmentation:
 
     @staticmethod
     def get_segments(
-        segmentation_result, frame_duration, source: str, threshold=0.5
+        segmentation_result, frame_duration, source_id: str, threshold=0.5
     ) -> List[SpeakerSegment]:
         """
         Convertit la sortie brute de la segmentation en segments temporels.
@@ -77,9 +79,10 @@ class AudioSegmentation:
                 if is_active:
                     if current_segment is None:
                         current_segment = {
-                            "source": source,
+                            "source_id": source_id,
                             "start": timestamp,
                             "speaker": f"Speaker {speaker}",
+                            "_id": str(uuid4()),
                         }
                     current_segment["end"] = timestamp
                 elif current_segment is not None:
@@ -107,7 +110,7 @@ class AudioSegmentation:
             segmentation_result.squeeze(0).detach().numpy()
         )  # (frames, speakers)
         segments = AudioSegmentation.get_segments(
-            segmentation_result_np, frame_duration, source=audio_metadata.source
+            segmentation_result_np, frame_duration, source_id=audio_metadata._id
         )
 
         extracted_audio_segments: List[SpeakerSegment] = []

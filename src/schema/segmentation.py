@@ -6,7 +6,8 @@ from dataclasses import dataclass
 
 @dataclass
 class Segment:
-    source: str
+    _id: str
+    source_id: str
     start: Union[int, datetime]
     end: Union[int, datetime]
 
