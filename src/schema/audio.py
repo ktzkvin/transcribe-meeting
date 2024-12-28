@@ -18,6 +18,20 @@ class AudioFileMetadata:
     sample_rate: Optional[int]
     _id: Optional[str] = str(uuid4())
 
+    @classmethod
+    def from_dict(cls, data: dict) -> "AudioFileMetadata":
+        audio_data = data["audio_data"]
+        if isinstance(audio_data, list):
+            audio_data = torch.FloatTensor(audio_data)
+        elif isinstance(audio_data, np.ndarray):
+            audio_data = torch.from_numpy(audio_data)
+
+        data["audio_data"] = audio_data
+        if "_id" not in data:
+            data["_id"] = str(uuid4())
+
+        return AudioFileMetadata(**data)
+
 
 @dataclass
 class AudioMicrophoneMetadata(AudioFileMetadata): ...

@@ -15,3 +15,10 @@ class Transcription:
     end_time: Optional[Union[int, datetime]]
     extras: Optional[Dict[str, Any]]
     _id: Optional[str] = str(uuid4())
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Transcription":
+        if "_id" not in data:
+            data["_id"] = str(uuid4())
+
+        return Transcription(**data)

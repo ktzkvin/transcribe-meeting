@@ -81,9 +81,9 @@ class KafkaCastConsumer(KafkaBaseConsumer):
             return []
         for item in reader:
             if isinstance(item, list):
-                yield [self.dataclass(**it) for it in item]
+                yield [self.dataclass.from_dict(it) for it in item]
             for it in item:
-                yield self.dataclass(**it)
+                yield self.dataclass.from_dict(it)
 
     def consume(self, value=None) -> Union[
         Type[SpeakerEmbedding],
