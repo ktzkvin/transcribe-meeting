@@ -6,12 +6,16 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "diart>=0.9.1",
+    "fastapi>=0.115.6",
     "huggingface-hub>=0.27.0",
     "kafka-python>=2.0.2",
     "numpy==1.24.4",
     "pyaudio>=0.2.14",
+    "pydantic>=2.10.4",
     "pydub>=0.25.1",
     "python-dotenv>=1.0.1",
+    "python-multipart>=0.0.20",
+    "uvicorn>=0.34.0",
 ]
 
 [project.optional-dependencies]
@@ -27,5 +31,6 @@ benchmark = [
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28.1",
     "pytest>=8.3.4",
 ]
