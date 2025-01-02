@@ -16,7 +16,7 @@ app = FastAPI()
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
-model_version = "tiny"
+model_version = "turbo"
 api_version = "0.0.1"
 transcription_model = WhisperTranscriber(model=model_version, device=device)
 
