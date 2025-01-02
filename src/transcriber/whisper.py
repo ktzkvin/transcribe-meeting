@@ -2,6 +2,7 @@ import os
 import sys
 import requests
 import whisper
+import numpy as np
 from dataclasses import asdict
 from contextlib import contextmanager
 from src.schema.audio import AudioFileMetadata
@@ -72,10 +73,12 @@ class WhisperApiTranscriber:
         }
 
         # Call the API (sending the audio file and form data)
+        if len(waveform.audio_data.shape) > 1:
+            waveform.audio_data = np.mean(waveform.audio_data, axis=1)
+
         waveform.audio_data = waveform.audio_data.tolist()
         audio_metadata = asdict(waveform)
         response = requests.post(self.api_url, json=audio_metadata, headers=headers)
-        print(response.json())
 
         if response.status_code == 200:
             # Assuming the response contains the transcription text and metadata
