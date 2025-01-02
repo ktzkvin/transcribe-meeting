@@ -6,7 +6,7 @@ import numpy as np
 from dataclasses import asdict
 from contextlib import contextmanager
 from src.schema.audio import AudioFileMetadata
-from src.schema.transcription import Transcription
+from src.schema.transcription import Transcription, TranscriptionOutput
 
 
 @contextmanager
@@ -83,6 +83,9 @@ class WhisperApiTranscriber:
         if response.status_code == 200:
             # Assuming the response contains the transcription text and metadata
             transcription_data = response.json()
+            transcription_data = TranscriptionOutput.model_construct(
+                **transcription_data
+            )
 
             # Construct the Transcription object
             transcription = Transcription(
@@ -91,9 +94,10 @@ class WhisperApiTranscriber:
                 end_time=waveform.end_time,
                 source=waveform.source,
                 audio_segment_index=waveform.audio_segment_index,
-                text=transcription_data.get("transcription", ""),
-                language=transcription_data.get("language", "en"),
-                extras=transcription_data,
+                text=transcription_data.text,
+                language=transcription_data.language,
+                extras=transcription_data.extras,
+                model_version=transcription_data.model_version,
             )
 
             return transcription

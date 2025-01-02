@@ -18,6 +18,7 @@ class Transcription:
     end_time: Optional[Union[int, datetime]]
     extras: Optional[Dict[str, Any]]
     _id: Optional[str] = str(uuid4())
+    model_version: Optional[str] = None
 
     @classmethod
     def from_dict(cls, data: dict) -> "Transcription":
@@ -28,7 +29,6 @@ class Transcription:
 
 
 class MetadataTranscription(Metadata):
-    model_version: str
     inference_time: float
     read_time: float
 
@@ -42,4 +42,5 @@ class TranscriptionOutput(BaseModel):
     start_time: Optional[Union[int, datetime]]
     end_time: Optional[Union[int, datetime]]
     extras: Optional[Dict[str, Any]]
+    model_version: Optional[str]
     _id: Optional[str] = str(uuid4())
