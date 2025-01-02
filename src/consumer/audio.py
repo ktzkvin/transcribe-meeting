@@ -16,7 +16,7 @@ class FileAudioConsumer(BaseConsumer):
     def consume(self) -> AudioSegment:
 
         for start in range(0, len(self.audio), self.chunk_size):
-            yield self.audio[start : start + self.chunk_size]
+            yield self.audio[start: start + self.chunk_size]
 
 
 class MicrophoneConsumer(BaseConsumer):

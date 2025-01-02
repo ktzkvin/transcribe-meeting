@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import torch
 from einops import rearrange
+from uuid import uuid4
 
 
 from diart.sources import MicrophoneAudioSource, FileAudioSource
@@ -12,6 +13,7 @@ from src.schema.audio import AudioFileMetadata, AudioMicrophoneMetadata
 class FileAudioSourceTimed(FileAudioSource):
     def __init__(self, file, sample_rate, padding=(0, 0), block_duration=0.5):
         super().__init__(file, sample_rate, padding, block_duration)
+        self.block_duration = block_duration
 
     def read(self):
         """Send each chunk of samples through the stream"""
@@ -48,6 +50,7 @@ class FileAudioSourceTimed(FileAudioSource):
             )
             chunks = np.vstack([chunks, last_chunk])
 
+        total_duration = num_samples / self.sample_rate
         # Stream blocks
         for i, waveform in enumerate(chunks):
 
@@ -56,11 +59,12 @@ class FileAudioSourceTimed(FileAudioSource):
                     break
                 audio_metadata = AudioFileMetadata(
                     audio_data=waveform,
-                    start_time=0,
-                    end_time=self.duration,
+                    start_time=i * self.block_duration,
+                    end_time=min((i + 1) * self.block_duration, total_duration),
                     sample_rate=self.sample_rate,
                     source=self.file,
                     audio_segment_index=i,
+                    _id=str(uuid4()),
                 )
                 self.stream.on_next(audio_metadata)
             except BaseException as e:
@@ -89,15 +93,20 @@ class MicrophoneAudioSourceTimed(MicrophoneAudioSource):
 
     def __init__(self, block_duration=0.5, device=None):
         super().__init__(block_duration, device)
+        self.block_duration = block_duration
+        self.audio_segment_index = 0
 
     def _read_callback(self, samples, *args):
         now = datetime.now()
 
         audio_metadata = AudioMicrophoneMetadata(
+            source=self.uri,
             audio_data=samples[:, [0]].T,
-            start_time=now - timedelta(seconds=self.duration),
+            start_time=now - timedelta(seconds=self.block_duration),
             end_time=now,
-            audio_segment_index=0,
+            audio_segment_index=self.audio_segment_index,
             sample_rate=self.sample_rate,
+            _id=str(uuid4()),
         )
         self._queue.put_nowait(audio_metadata)
+        self.audio_segment_index += 1
