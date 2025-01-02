@@ -1,3 +1,4 @@
+from typing import Union
 import argparse
 import logging
 import traceback
@@ -9,14 +10,14 @@ from src.schema.config.consumer import KafkaConsumerConfig
 from src.schema.config.producer import KafkaProducerConfig
 
 from src.observers.logger import DebugAudioMetadataLogger, DebugLogger
-from src.transcriber.whisper import WhisperTranscriber
+from src.transcriber.whisper import WhisperTranscriber, WhisperApiTranscriber
 from src.producer.kafka import KafkaDataclassProducer
 
 
 def main(
     source_audio: KafkaAudioSource,
     observer_audio: Observer,
-    transcriber: WhisperTranscriber,
+    transcriber: Union[WhisperTranscriber, WhisperApiTranscriber],
     producer: KafkaDataclassProducer,
     observer_transcription: Observer,
 ):
@@ -93,6 +94,14 @@ if __name__ == "__main__":
         help="Device for Whisper transcription (default: 'cuda')",
     )
 
+    # Optional transcription API URL (for WhisperApiTranscriber)
+    parser.add_argument(
+        "--url-transcription",
+        type=str,
+        default=None,
+        help="API URL for external transcription service (optional)",
+    )
+
     # Parse arguments
     args = parser.parse_args()
 
@@ -101,7 +110,7 @@ if __name__ == "__main__":
         kafka_config=KafkaConsumerConfig(
             topic=args.topic,
             bootstrap_servers=args.bootstrap_servers,
-            groud_id="consumer-audio",
+            group_id="consumer-audio",
             enable_auto_commit=False,
         ),
         sample_rate=args.sample_rate,
@@ -128,7 +137,10 @@ if __name__ == "__main__":
     observer = DebugAudioMetadataLogger(logger=input_logger, write_data=args.write_data)
 
     # Set up Whisper transcriber
-    transcriber = WhisperTranscriber(model=args.model, device=args.device)
+    if args.url_transcription is None:
+        transcriber = WhisperTranscriber(model=args.model, device=args.device)
+    else:
+        transcriber = WhisperApiTranscriber(api_url=args.url_transcription)
 
     # Run the main function
     main(
